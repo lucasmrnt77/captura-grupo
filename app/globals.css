@@ -31,3 +31,33 @@ body { font-family: var(--font-poppins), system-ui, sans-serif; }
   color: #20d681;
   transform: scale(1.03);
 }
+
+/* ===== Painel (/painel) ===== */
+.painel {
+  color-scheme: light;
+  --surface-0: #f4f4f2;
+  --surface-1: #fcfcfb;
+  --text-primary: #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted: #77766f;
+  --line: #e4e3df;
+  --series-1: #2a78d6;
+  --series-1-soft: #dbe8f8;
+  background: var(--surface-0);
+  color: var(--text-primary);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  .painel {
+    color-scheme: dark;
+    --surface-0: #111110;
+    --surface-1: #1a1a19;
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted: #8f8e86;
+    --line: #2d2d2b;
+    --series-1: #3987e5;
+    --series-1-soft: #1d2f47;
+  }
+}
+.painel .tabular { font-variant-numeric: tabular-nums; }
