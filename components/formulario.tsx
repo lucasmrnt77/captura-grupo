@@ -131,30 +131,30 @@ export function Formulario() {
     )
   }
 
-  const campo = "h-[52px] w-full min-w-0 rounded-lg border-2 bg-[#2a2a2a] px-4 text-base text-white placeholder:text-gray-500 outline-none transition-colors"
+  const campo = "h-12 w-full min-w-0 rounded-lg md:h-[52px] border-2 bg-[#2a2a2a] px-4 text-base text-white placeholder:text-gray-500 outline-none transition-colors"
 
   return (
-    <form onSubmit={enviar} noValidate className="rounded-2xl border border-gray-700 bg-[#171717] p-5 md:p-7">
+    <form onSubmit={enviar} noValidate className="rounded-2xl border border-gray-700 bg-[#171717] p-4 md:p-6">
       {/* armadilha anti-robô */}
       <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 opacity-0" />
 
-      <label htmlFor="email" className="mb-1 block text-sm font-medium text-gray-300">Correo electrónico</label>
+      <label htmlFor="email" className="sr-only">Correo electrónico</label>
       <input
         id="email" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" spellCheck={false}
-        value={email} placeholder="tucorreo@ejemplo.com"
+        value={email} placeholder="Tu correo electrónico"
         onChange={(e) => { setEmail(e.target.value); if (erroEmail) setErroEmail("") }}
         aria-invalid={!!erroEmail}
         className={`${campo} ${erroEmail ? "border-red-500" : "border-gray-600 focus:border-[#20d681]"}`}
       />
       {erroEmail && <p className="mt-1.5 text-sm text-red-400">{erroEmail}</p>}
 
-      <label htmlFor="whatsapp" className="mb-1 mt-4 block text-sm font-medium text-gray-300">WhatsApp</label>
-      <div className="flex gap-2">
+      <label htmlFor="whatsapp" className="sr-only">WhatsApp</label>
+      <div className="mt-3 flex gap-2">
         <div className="relative shrink-0" ref={caixa}>
           <button
             type="button" aria-label="Seleccionar país" aria-haspopup="listbox" aria-expanded={aberto}
             onClick={() => setAberto(!aberto)}
-            className="flex h-[52px] items-center gap-1.5 rounded-lg border-2 border-gray-600 bg-[#2a2a2a] px-3 text-white transition-colors hover:border-[#20d681]"
+            className="flex h-12 items-center gap-1.5 md:h-[52px] rounded-lg border-2 border-gray-600 bg-[#2a2a2a] px-3 text-white transition-colors hover:border-[#20d681]"
           >
             <span className="text-xl leading-none">{pais.flag}</span>
             <span className="text-base font-medium">+{pais.dial}</span>
@@ -188,7 +188,7 @@ export function Formulario() {
       </div>
       {erroTel && <p className="mt-1.5 text-sm text-red-400">{erroTel}</p>}
 
-      <button type="submit" disabled={enviando} className="pulse-green-button mt-6 w-full px-4 py-5 text-base font-bold disabled:opacity-70 md:text-lg">
+      <button type="submit" disabled={enviando} className="pulse-green-button mt-4 w-full px-4 py-4 text-base font-bold disabled:opacity-70 md:text-lg">
         {enviando ? "REGISTRANDO…" : "QUIERO UNIRME AL GRUPO"}
       </button>
       {erroGeral && <p className="mt-3 text-center text-sm text-red-400">{erroGeral}</p>}
