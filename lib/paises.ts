@@ -1,3 +1,5 @@
+import { telefoneComPais } from "./telefone-pais"
+
 export type Pais = { code: string; name: string; dial: string; flag: string; placeholder: string }
 
 /** Ordem: primeiro os países com mais leads, depois o resto em ordem alfabética. */
@@ -33,22 +35,14 @@ export function paisPorCodigo(code: string | null | undefined): Pais | undefined
 }
 
 /**
- * Monta o número completo (só dígitos, com DDI) a partir do que a pessoa digitou.
- * - remove tudo que não é dígito
- * - remove o 0 inicial de tronco (UY 099..., AR 011..., etc.)
- * - se a pessoa já colou com o DDI, não duplica
+ * Monta o número completo (só dígitos, com DDI) a partir do que a pessoa digitou,
+ * seguindo as regras de lib/normalizar.ts (Argentina 549 + nacional, tira o 0
+ * de tronco, não duplica o DDI, México 52...).
  * Retorna null se o número não parece válido.
  */
 export function montarTelefone(digitado: string, pais: Pais): string | null {
-  let n = (digitado || "").replace(/\D/g, "")
+  const n = telefoneComPais(digitado, { nome: pais.name, ddi: pais.dial })
   if (!n) return null
-  const colouComMais = /^\s*\+/.test(digitado || "")
-  if (colouComMais || (n.startsWith(pais.dial) && n.length > pais.dial.length + 7)) {
-    // já veio com DDI
-  } else {
-    n = n.replace(/^0+/, "")
-    n = pais.dial + n
-  }
   const local = n.length - pais.dial.length
   if (n.length < 9 || n.length > 15 || local < 6) return null
   return n
