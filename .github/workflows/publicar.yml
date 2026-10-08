@@ -1,0 +1,29 @@
+# Publica a página do grupo na Vercel a cada push no main.
+# (O projeto na Vercel está ligado ao v0; por isso o push no GitHub não publicava sozinho.)
+# Precisa do segredo VERCEL_TOKEN: Settings → Secrets and variables → Actions.
+name: Publicar na Vercel
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+concurrency:
+  group: publicar-producao
+  cancel-in-progress: false
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      VERCEL_ORG_ID: team_d6d4oJxyMcNRBDimBbhizIry
+      VERCEL_PROJECT_ID: prj_XiSJU1HhJOTrmucJATNX9383BvlS
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # O build roda na própria Vercel, com as variáveis do projeto (inclusive as sensíveis)
+      - name: Publicar em produção
+        run: npx --yes vercel@latest deploy --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
