@@ -26,3 +26,11 @@ test("fbc: cookie tem prioridade; senão monta pelo fbclid", () => {
   assert.equal(calcularFbc(null, "abc", 5), "fb.1.5.abc")
   assert.equal(calcularFbc(null, null), null)
 })
+
+test("código de teste da Meta só entra em requisições de teste", async () => {
+  const { corpoMeta } = await import("../lib/meta.ts")
+  const ev = montarEventoMeta({ eventId: "x1", email: "a@b.com", telefone: "59899000000", paisCodigo: "UY", url: "", ip: null, userAgent: null, fbp: null, fbc: null })
+  assert.equal("test_event_code" in corpoMeta(ev, false, "TEST1"), false)
+  assert.equal(corpoMeta(ev, true, "TEST1").test_event_code, "TEST1")
+  assert.equal("test_event_code" in corpoMeta(ev, true, ""), false)
+})

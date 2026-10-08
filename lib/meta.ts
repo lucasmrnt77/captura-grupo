@@ -56,15 +56,24 @@ export function calcularFbc(cookieFbc: string | null, fbclid: string | null, ago
   return null
 }
 
-export async function enviarParaMeta(evento: ReturnType<typeof montarEventoMeta>) {
+/** Monta o corpo enviado à Meta. O código de teste só entra em requisições de teste. */
+export function corpoMeta(evento: ReturnType<typeof montarEventoMeta>, teste: boolean, codigoTeste = process.env.META_TEST_EVENT_CODE) {
+  const corpo: Record<string, unknown> = { data: [evento] }
+  const codigo = codigoTeste?.trim()
+  if (teste && codigo) corpo.test_event_code = codigo
+  return corpo
+}
+
+export type ResultadoMeta = { ok: boolean; motivo?: "sem_config" | "recusado" | "falhou"; http?: number; resposta?: unknown }
+
+export async function enviarParaMeta(evento: ReturnType<typeof montarEventoMeta>, opcoes: { teste?: boolean } = {}): Promise<ResultadoMeta> {
   const pixel = process.env.NEXT_PUBLIC_META_PIXEL_ID?.replace(/\D/g, "")
   const token = process.env.META_CAPI_ACCESS_TOKEN?.trim()
-  if (!pixel || !token) return { ok: false, motivo: "sem_config" as const }
+  if (!pixel || !token) return { ok: false, motivo: "sem_config" }
 
-  const corpo: Record<string, unknown> = { data: [evento] }
-  const teste = process.env.META_TEST_EVENT_CODE?.trim()
-  if (teste) corpo.test_event_code = teste
+  const corpo = corpoMeta(evento, opcoes.teste === true)
 
+  let ultimo: ResultadoMeta = { ok: false, motivo: "falhou" }
   for (let tentativa = 1; tentativa <= 3; tentativa++) {
     try {
       const r = await fetch(`https://graph.facebook.com/v21.0/${pixel}/events?access_token=${encodeURIComponent(token)}`, {
@@ -73,14 +82,18 @@ export async function enviarParaMeta(evento: ReturnType<typeof montarEventoMeta>
         body: JSON.stringify(corpo),
         cache: "no-store",
       })
-      if (r.ok) return { ok: true as const }
       const texto = await r.text().catch(() => "")
+      let resposta: unknown = texto.slice(0, 500)
+      try { resposta = JSON.parse(texto) } catch { /* texto puro */ }
+      if (r.ok) return { ok: true, http: r.status, resposta }
       console.error(`[meta] ${evento.event_name} falhou (${r.status}) tentativa ${tentativa}:`, texto.slice(0, 500))
-      if (r.status < 500 && r.status !== 429) return { ok: false, motivo: "recusado" as const }
+      ultimo = { ok: false, motivo: "recusado", http: r.status, resposta }
+      if (r.status < 500 && r.status !== 429) return ultimo
     } catch (e) {
       console.error(`[meta] erro de rede tentativa ${tentativa}`, e)
+      ultimo = { ok: false, motivo: "falhou", resposta: e instanceof Error ? e.message : String(e) }
     }
     await new Promise((res) => setTimeout(res, 400 * tentativa))
   }
-  return { ok: false, motivo: "falhou" as const }
+  return ultimo
 }

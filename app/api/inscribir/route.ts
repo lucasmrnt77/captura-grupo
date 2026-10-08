@@ -1,6 +1,7 @@
 import { NextResponse, after } from "next/server"
-import { calcularFbc, enviarParaMeta, montarEventoMeta } from "@/lib/meta"
+import { EVENTO_LEAD, calcularFbc, enviarParaMeta, montarEventoMeta } from "@/lib/meta"
 import { emailValido, montarTelefone, paisPorCodigo } from "@/lib/paises"
+import { modoTeste } from "@/lib/teste"
 
 const txt = (v: unknown, max = 300) => (typeof v === "string" ? v.trim().slice(0, max) : "")
 
@@ -25,6 +26,19 @@ export async function POST(req: Request) {
 
   if (!emailValido(email)) return NextResponse.json({ ok: false, erro: "email" }, { status: 400 })
   if (!pais || !telefono) return NextResponse.json({ ok: false, erro: "telefono" }, { status: 400 })
+
+  // Teste automático: não grava a inscrição e manda o evento só para "Eventos de teste" da Meta
+  const teste = modoTeste(body.teste, req.headers.get("x-teste-token"))
+  if (teste === "negado") return NextResponse.json({ ok: false, erro: "teste_nao_autorizado" }, { status: 403 })
+  if (teste === "sim") {
+    const eventId = txt(body.event_id, 100)
+    if (!eventId) return NextResponse.json({ ok: false, erro: "event_id" }, { status: 400 })
+    const meta = await enviarParaMeta(montarEventoMeta({
+      eventId, email, telefone: telefono, paisCodigo: pais.code, url: txt(body.url, 2000),
+      ip: null, userAgent: req.headers.get("user-agent"), fbp: txt(body.fbp, 200) || null, fbc: txt(body.fbc, 500) || null,
+    }), { teste: true })
+    return NextResponse.json({ ok: true, grupo: "", teste: { event_id: eventId, evento: EVENTO_LEAD, meta } })
+  }
 
   const url = process.env.SUPABASE_URL?.replace(/\/+$/, "")
   const chave = process.env.SUPABASE_SERVICE_ROLE_KEY
