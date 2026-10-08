@@ -17,8 +17,13 @@ export async function POST(req: Request) {
 
   const grupo = process.env.GRUPO_WHATSAPP_URL || ""
 
+  // Teste automático (precisa do token): não grava a inscrição e manda o evento só para "Eventos de teste"
+  const teste = modoTeste(body.teste, req.headers.get("x-teste-token"))
+  if (teste === "negado") return NextResponse.json({ ok: false, erro: "teste_nao_autorizado" }, { status: 403 })
+
   // Campo-armadilha: humanos não veem, robôs preenchem. Finge sucesso e não grava.
-  if (txt(body.website)) return NextResponse.json({ ok: true, grupo })
+  // Os testes automáticos também preenchem: assim uma versão antiga desta rota nunca grava um teste.
+  if (txt(body.website) && teste !== "sim") return NextResponse.json({ ok: true, grupo })
 
   const email = txt(body.email, 254).toLowerCase()
   const pais = paisPorCodigo(txt(body.pais, 2))
@@ -27,9 +32,6 @@ export async function POST(req: Request) {
   if (!emailValido(email)) return NextResponse.json({ ok: false, erro: "email" }, { status: 400 })
   if (!pais || !telefono) return NextResponse.json({ ok: false, erro: "telefono" }, { status: 400 })
 
-  // Teste automático: não grava a inscrição e manda o evento só para "Eventos de teste" da Meta
-  const teste = modoTeste(body.teste, req.headers.get("x-teste-token"))
-  if (teste === "negado") return NextResponse.json({ ok: false, erro: "teste_nao_autorizado" }, { status: 403 })
   if (teste === "sim") {
     const eventId = txt(body.event_id, 100)
     if (!eventId) return NextResponse.json({ ok: false, erro: "event_id" }, { status: 400 })
