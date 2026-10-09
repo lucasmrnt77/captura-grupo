@@ -64,12 +64,15 @@ export function corpoMeta(evento: ReturnType<typeof montarEventoMeta>, teste: bo
   return corpo
 }
 
-export type ResultadoMeta = { ok: boolean; motivo?: "sem_config" | "recusado" | "falhou"; http?: number; resposta?: unknown }
+export type ResultadoMeta = { ok: boolean; motivo?: "sem_config" | "sem_codigo_teste" | "recusado" | "falhou"; http?: number; resposta?: unknown }
 
 export async function enviarParaMeta(evento: ReturnType<typeof montarEventoMeta>, opcoes: { teste?: boolean } = {}): Promise<ResultadoMeta> {
   const pixel = process.env.NEXT_PUBLIC_META_PIXEL_ID?.replace(/\D/g, "")
   const token = process.env.META_CAPI_ACCESS_TOKEN?.trim()
   if (!pixel || !token) return { ok: false, motivo: "sem_config" }
+
+  // Teste sem código de "Eventos de teste": NÃO envia, senão viraria um Lead real nas campanhas
+  if (opcoes.teste === true && !process.env.META_TEST_EVENT_CODE?.trim()) return { ok: false, motivo: "sem_codigo_teste" }
 
   const corpo = corpoMeta(evento, opcoes.teste === true)
 
